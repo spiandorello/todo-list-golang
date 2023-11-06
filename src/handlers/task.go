@@ -25,6 +25,7 @@ func (t Task) Routes(app *fiber.App) {
 
 	router.Get("/", t.list)
 	router.Post("/", t.create)
+	router.Put("/:id/complete", t.complete)
 }
 
 func (t Task) list(c *fiber.Ctx) error {
@@ -53,4 +54,21 @@ func (t Task) create(c *fiber.Ctx) error {
 	}
 
 	return c.SendStatus(http.StatusCreated)
+}
+
+func (t Task) complete(c *fiber.Ctx) error {
+	ctx := c.UserContext()
+
+	ID := c.Params("id")
+	task, err := t.taskService.Get(ctx, ID)
+	if err != nil {
+		return c.SendStatus(http.StatusBadGateway)
+	}
+
+	err = t.taskService.Complete(ctx, task)
+	if err != nil {
+		return c.SendStatus(http.StatusInternalServerError)
+	}
+
+	return c.SendStatus(http.StatusNoContent)
 }
